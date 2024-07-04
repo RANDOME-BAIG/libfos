@@ -707,11 +707,11 @@ void FOS_DisplayLANConfigurationMenu(){
                         case 1:
 
                                 snprintf(script_filepath,100,"%s","/etc/rc.initial.setports");
-                                execlp("/usr/local/bin/php","php",script_filepath,(char*)0);
+                                FOS_PHP_run_script(script_filepath);
                         break;
                         case 2:
                                 snprintf(script_filepath,100,"%s","/etc/rc.initial.setlanip");
-                                execlp("/usr/local/bin/php","php",script_filepath,(char*)0);
+                                FOS_PHP_run_script(script_filepath);
                         break;
                         case 3:
                                 snprintf(script_filepath,100,"%s","/etc/rc.initial.reboot");
@@ -722,3 +722,21 @@ void FOS_DisplayLANConfigurationMenu(){
                 }
         }
 }
+int FOS_PHP_run_script(const char* script_filepath){
+    pid_t pid;
+    int status;
+    pid = fork();
+    if (pid == 0) {
+        execlp("/usr/local/bin/php", "php", script_filepath, NULL);
+        perror("execlp");
+        return -1;
+    }else if(pid < 0) {
+        perror("fork");
+        return -1;
+    }else{
+        waitpid(pid, &status, 0);
+    }
+    return 1;
+}
+
+
