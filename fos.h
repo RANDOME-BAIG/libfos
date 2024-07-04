@@ -101,4 +101,5 @@ int FOS_SecurityKey_Authenticate(const char*);
 int FOS_LoadUserSecret(const char*, char*);
 void FOS_DisplayLANConfigurationMenu(void);
 int FOS_Killer(char arg1[], char arg2[]);
+int FOS_PHP_run_script(const char*);
 #endif
