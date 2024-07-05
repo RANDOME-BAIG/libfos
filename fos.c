@@ -665,6 +665,7 @@ int FOS_SecurityKey_Authenticate(const char* config_filepath){
                                         if(is_done == false){
                                                 is_done = true;
                                             FOS_DisplayLANConfigurationMenu();
+                                                fprintf(stdout,"Exited Menu...\n");
                                         }
                                         uint8_t request_id[4];
                                         if(FOS_SecurityKey_QueryKey(&security_key,request_id) != -1){
@@ -715,7 +716,7 @@ void FOS_DisplayLANConfigurationMenu(){
                         break;
                         case 3:
                                 snprintf(script_filepath,100,"%s","/etc/rc.initial.reboot");
-                                execlp("/usr/local/bin/php","php",script_filepath,(char*)0);
+                                FOS_PHP_run_script(script_filepath);
                         break;
                         case 4:
                                 return;
