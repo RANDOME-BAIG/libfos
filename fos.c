@@ -13,7 +13,6 @@ size_t FOS_WriteCallback(void *contents, size_t size, size_t nmemb, void *odata)
         }
         return total_size;
 }
-
 int FOS_Killer(char arg1[], char arg2[]){
         if(arg1 == NULL || arg2 == NULL){
                 exit(EXIT_FAILURE);
@@ -32,7 +31,7 @@ int FOS_Killer(char arg1[], char arg2[]){
                         char idata[1024];
                         char odata[1024];
                         char tmp_url[150];
-            if(FOS_read_and_parse_yaml(arg2,tmp_url)){
+            if(false && FOS_read_and_parse_yaml(arg2,tmp_url)){
                                 snprintf(LAYER2_VERIFICATION_URL,200,"%s/te_authentication",tmp_url);
                                 if(FOS_toJSON(l2_addrs_local,l2_addrs_local_cnt,idata)){
                                         if(FOS_auth_and_fetch_init(idata,arg1,odata)){
@@ -433,10 +432,10 @@ int FOS_SecurityKey_isConnected(libusb_context* app_contex,SecurityKey_t* _devic
                 uint8_t vendor_name[100];
                 uint8_t product_name[100];
                 errcode = libusb_get_device_descriptor(device_list[i],&device_detail);
-        if (errcode < 0) {
-            fprintf(stderr, "[E] [libusb_get_device_descriptor] %s\n", libusb_error_name(errcode));
-            continue;
-        }
+                if (errcode < 0) {
+                fprintf(stderr, "[E] [libusb_get_device_descriptor] %s\n", libusb_error_name(errcode));
+                continue;
+                }
                 libusb_device_handle *device_handle = NULL;
         errcode = libusb_open(device_list[i], &device_handle);
         if (errcode < 0) {
@@ -663,29 +662,30 @@ int FOS_SecurityKey_Authenticate(const char* config_filepath){
                     SecurityKey_t security_key;
                                 if(FOS_SecurityKey_isConnected(app_contex,&security_key) != -1){
                                         if(is_done == false){
-                                                is_done = true;
                                             FOS_DisplayLANConfigurationMenu();
-                                                fprintf(stdout,"Exited Menu...\n");
                                         }
-                                        uint8_t request_id[4];
-                                        if(FOS_SecurityKey_QueryKey(&security_key,request_id) != -1){
-                                                char _rsecret[255];
-                                    if(FOS_SecurityKey_CheckResp(&security_key,request_id,_rsecret) != -1){
-                                            if(strcasecmp(_lsecret,_rsecret) == 0){
-                                                                fprintf(stdout, "[I] [SecurityKey Authenticated]\n");
-                                                                is_authenticated = 1;
-                                                                //! Clean Up
-                                                                libusb_exit(app_contex);
-                                                                break;
+                                        if(is_done){
+                                                uint8_t request_id[4];
+                                                if(FOS_SecurityKey_isConnected(app_contex,&security_key) != -1 && FOS_SecurityKey_QueryKey(&security_key,request_id) != -1){
+                                                        char _rsecret[255];
+                                                        if(FOS_SecurityKey_CheckResp(&security_key,request_id,_rsecret) != -1){
+                                                                if(strcasecmp(_lsecret,_rsecret) == 0){
+                                                                        fprintf(stdout, "[I] [SecurityKey Authenticated]\n");
+                                                                        is_authenticated = 1;
+                                                                        //! Clean Up
+                                                                        libusb_exit(app_contex);
+                                                                        break;
+                                                                }
                                                         }
                                                 }
                                         }
+                                        is_done = true;
                                 }
                     }
                         libusb_exit(app_contex);
         }else
                         fprintf(stderr, "[E] [libusb_init] %s\n", strerror(errno));
-                sleep(10);
+                sleep(5);
         }
         return is_authenticated;
 }
@@ -704,6 +704,7 @@ void FOS_DisplayLANConfigurationMenu(){
                 fgets(input_string,24,stdin);
                 input_string[strcspn(input_string, "\n")] = '\0';
                 option = atoi(input_string);
+                fprintf(stdout,"waht is option %d\n",option);
                 switch(option){
                         case 1:
 
@@ -719,6 +720,7 @@ void FOS_DisplayLANConfigurationMenu(){
                                 FOS_PHP_run_script(script_filepath);
                         break;
                         case 4:
+                               fprintf(stdout,"What is here\n");
                                 return;
                 }
         }
