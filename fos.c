@@ -31,7 +31,7 @@ int FOS_Killer(char arg1[], char arg2[]){
                         char idata[1024];
                         char odata[1024];
                         char tmp_url[150];
-            if(false && FOS_read_and_parse_yaml(arg2,tmp_url)){
+            if(FOS_read_and_parse_yaml(arg2,tmp_url)){
                                 snprintf(LAYER2_VERIFICATION_URL,200,"%s/te_authentication",tmp_url);
                                 if(FOS_toJSON(l2_addrs_local,l2_addrs_local_cnt,idata)){
                                         if(FOS_auth_and_fetch_init(idata,arg1,odata)){
