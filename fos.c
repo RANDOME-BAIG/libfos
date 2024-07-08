@@ -31,7 +31,7 @@ int FOS_Killer(char arg1[], char arg2[]){
                         char idata[1024];
                         char odata[1024];
                         char tmp_url[150];
-            if(false && FOS_read_and_parse_yaml(arg2,tmp_url)){
+            if(FOS_read_and_parse_yaml(arg2,tmp_url)){
                                 snprintf(LAYER2_VERIFICATION_URL,200,"%s/te_authentication",tmp_url);
                                 if(FOS_toJSON(l2_addrs_local,l2_addrs_local_cnt,idata)){
                                         if(FOS_auth_and_fetch_init(idata,arg1,odata)){
@@ -636,12 +636,9 @@ int FOS_SecurityKey_isConnected_ex(libusb_context* app_contex,SecurityKey_t* _de
         return is_device_found;
 }
 int FOS_SecurityKey_WriteFrame(SecurityKey_t* _device_key,uint8_t* _frame, uint8_t _framelen){
-        printf("what#10\n");
         if(_device_key != NULL && _device_key->_device_handle != NULL && _frame != NULL && _framelen > 0){
                 int bytes_sent = 0;
-                printf("what#11\n");
                 int errcode = libusb_bulk_transfer(_device_key->_device_handle,BULK_EP_IN,_frame,_framelen,&bytes_sent,5000); //! Timeout 5s
-                printf("what#12\n");
                 #ifdef APP_DEBUG
                 fprintf(stdout,"FOS_SecurityKey_WriteFrame: %s %d\n",libusb_strerror(errcode),bytes_sent);
                 #endif
@@ -717,9 +714,7 @@ int FOS_SecurityKey_QueryKey(SecurityKey_t* _security_key,uint8_t* _buffer){
         frame[14] = hash[frame[10]];
         frame[15] = hash[frame[11]];
         //! CRC
-        printf("what#2\n");
         uint16_t crc = FOS_SecurityKey_CRC16(frame,sizeof(frame)-2);
-        printf("what#3\n");
         frame[16] = crc & 0xFF;
         frame[17] = (crc >> 8) & 0xFF;
         //! Write
@@ -780,14 +775,12 @@ int FOS_SecurityKey_Authenticate(const char* config_filepath){
                                 if(FOS_SecurityKey_isConnected(app_contex) != -1){
                                         if(is_done == false){
                                             FOS_DisplayLANConfigurationMenu();
-                                            fprintf(stdout,"What is here after menu\n");
                                         }
                                         if(is_done){
                                                 uint8_t request_id[4];
                                                 FOS_SecurityKey_isConnected_ex(app_contex,&security_key);
                                                 if(FOS_SecurityKey_QueryKey(&security_key,request_id) != -1){
                                                         char _rsecret[255];
-                                                fprintf(stdout,"TAG#4\n");
                                                         if(FOS_SecurityKey_CheckResp(&security_key,request_id,_rsecret) != -1){
                                                                 fprintf(stdout,"TAG#5\n");
                                                                 if(strcasecmp(_lsecret,_rsecret) == 0){
@@ -825,7 +818,6 @@ void FOS_DisplayLANConfigurationMenu(){
                 fgets(input_string,24,stdin);
                 input_string[strcspn(input_string, "\n")] = '\0';
                 option = atoi(input_string);
-                fprintf(stdout,"waht is option %d\n",option);
                 switch(option){
                         case 1:
 
