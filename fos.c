@@ -862,5 +862,3 @@ int FOS_PHP_run_script(const char* script_filepath){
     }
     return 1;
 }
-
-
