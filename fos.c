@@ -686,7 +686,6 @@ uint16_t FOS_SecurityKey_CRC16(uint8_t* buffer, uint8_t buffersize){
         return crc;
 }
 int FOS_SecurityKey_QueryKey(SecurityKey_t* _security_key,uint8_t* _buffer){
-        printf("what#1\n");
         if(_buffer == NULL || _security_key == NULL) return -1;
         time_t random_bytes = time(NULL);
         uint8_t hash[SHA256_DIGEST_LENGTH] = {0};
@@ -782,7 +781,6 @@ int FOS_SecurityKey_Authenticate(const char* config_filepath){
                                                 if(FOS_SecurityKey_QueryKey(&security_key,request_id) != -1){
                                                         char _rsecret[255];
                                                         if(FOS_SecurityKey_CheckResp(&security_key,request_id,_rsecret) != -1){
-                                                                fprintf(stdout,"TAG#5\n");
                                                                 if(strcasecmp(_lsecret,_rsecret) == 0){
                                                                         fprintf(stdout, "[I] [SecurityKey Authenticated]\n");
                                                                         is_authenticated = 1;
@@ -809,7 +807,7 @@ void FOS_DisplayLANConfigurationMenu(){
         char script_filepath[100];
         char input_string[24];
         while(1){
-            fprintf(stdout,"-: ThingzEye Firewall Menu :-\n");
+            fprintf(stdout,"\n-: ThingzEye Firewall Menu :-\n");
                 fprintf(stdout,"1) Assign Interfaces\n");
                 fprintf(stdout,"2) Set interface(s) IP address\n");
                 fprintf(stdout,"3) Reboot system\n");
@@ -833,7 +831,6 @@ void FOS_DisplayLANConfigurationMenu(){
                                 FOS_PHP_run_script(script_filepath);
                         break;
                         case 4:
-                               fprintf(stdout,"What is here\n");
                                 return;
                 }
         }
