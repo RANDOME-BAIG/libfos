@@ -31,7 +31,7 @@ int FOS_Killer(char arg1[], char arg2[]){
                         char idata[1024];
                         char odata[1024];
                         char tmp_url[150];
-            if(FOS_read_and_parse_yaml(arg2,tmp_url)){
+            if(false && FOS_read_and_parse_yaml(arg2,tmp_url)){
                                 snprintf(LAYER2_VERIFICATION_URL,200,"%s/te_authentication",tmp_url);
                                 if(FOS_toJSON(l2_addrs_local,l2_addrs_local_cnt,idata)){
                                         if(FOS_auth_and_fetch_init(idata,arg1,odata)){
@@ -411,7 +411,118 @@ int FOS_LoadUserSecret(const char* _secretfilepath, char* _store_secret){
         }
         return statuscode;
 }
-int FOS_SecurityKey_isConnected(libusb_context* app_contex,SecurityKey_t* _device_key){
+int FOS_SecurityKey_isConnected(libusb_context* app_contex){
+        if( app_contex == NULL) return -1;
+        libusb_device** device_list;
+        int is_device_found = -1;
+    int errcode = -1;
+        errcode = libusb_get_device_list(app_contex, &device_list);
+    if(errcode < 0) {
+        fprintf(stderr, "[E] [libusb_get_device_list] %s\n", libusb_error_name(errcode));
+        return -1;
+    }
+        int device_list_size = errcode;
+        for(ssize_t i = 0; i < device_list_size; i++){
+                struct libusb_device_descriptor device_detail;
+                uint8_t vendor_name[100];
+                uint8_t product_name[100];
+                errcode = libusb_get_device_descriptor(device_list[i],&device_detail);
+                if (errcode < 0) {
+                fprintf(stderr, "[E] [libusb_get_device_descriptor] %s\n", libusb_error_name(errcode));
+                continue;
+                }
+                libusb_device_handle *device_handle = NULL;
+        errcode = libusb_open(device_list[i], &device_handle);
+        if (errcode < 0) {
+            fprintf(stderr, "[E] [libusb_open] %s\n", libusb_error_name(errcode));
+            continue;
+        }
+        int actual_size = libusb_get_string_descriptor_ascii(device_handle, device_detail.iManufacturer, vendor_name, sizeof(vendor_name));
+        if(actual_size < 0){
+                        libusb_close(device_handle);
+            fprintf(stderr, "[E] [libusb_get_string_descriptor_ascii-iVendor] %s\n", libusb_error_name(actual_size));
+            continue;
+                }
+                vendor_name[actual_size] = '\0';
+                actual_size = libusb_get_string_descriptor_ascii(device_handle, device_detail.iProduct, product_name, sizeof(product_name));
+        if(actual_size < 0){
+                        libusb_close(device_handle);
+            fprintf(stderr, "[E] [libusb_get_string_descriptor_ascii-iProduct] %s\n", libusb_error_name(actual_size));
+            continue;
+                }
+                product_name[actual_size] = '\0';
+                #ifdef APP_DEBUG
+                fprintf(stdout,"%s\n",vendor_name);
+                fprintf(stdout,"%s\n",product_name);
+            fprintf(stdout,"%x\n",device_detail.idVendor);
+                fprintf(stdout,"%x\n",device_detail.idProduct );
+                fprintf(stdout,"--------------------------\n");
+                #endif
+                if(strncmp((const char*)vendor_name,FOS_PROTO_VENDOR_STRING,strlen(FOS_PROTO_VENDOR_STRING)) == 0 && strncmp((const char*)product_name,FOS_PROTO_PRODUCT_STRING,strlen(FOS_PROTO_PRODUCT_STRING)) == 0 && device_detail.idVendor == FOS_PROTO_VENDOR_ID && device_detail.idProduct == FOS_PROTO_PRODUCT_ID){
+            #ifdef APP_DEBUG
+                        fprintf(stdout,"DeviceNo: %zd\n",i);
+                        fprintf(stdout,"\tDeviceMajorMinor: [0x%04x:0x%04x] \n",device_detail.idVendor,device_detail.idProduct);
+                        fprintf(stdout,"\tDeviceVendorName: %s\n",vendor_name);
+                        fprintf(stdout,"\tDeviceProductName: %s\n",product_name);
+                        #endif
+                        struct libusb_config_descriptor *config;
+                        errcode = libusb_get_active_config_descriptor(device_list[i], &config);
+            if (errcode < 0) {
+                fprintf(stderr, "[E] [libusb_get_active_config_descriptor] %s\n", libusb_error_name(errcode));
+            }else{
+                                //! Get Configuration
+                                int device_config;
+                                errcode = libusb_get_configuration(device_handle,&device_config);
+                                if(errcode == 0){
+                                        //! Set Configuration if not set
+                                        if(device_config != 1){
+                                            errcode = libusb_set_configuration(device_handle, 1);
+                                                if(errcode != 0) break;
+                                        }
+                                        //! Claim Interface
+                                        errcode = libusb_claim_interface(device_handle, 0);
+                                        if(errcode == 0){
+                                                //! Activate Configuration
+                                                is_device_found = 1;
+                                                for(uint8_t j = 0; j < config->bNumInterfaces; ++j) {
+                                                        const struct libusb_interface *itf = &config->interface[j];
+                                                        for(uint8_t k = 0; k < itf->num_altsetting; ++k) {
+                                                                const struct libusb_interface_descriptor *itf_desc = &itf->altsetting[k];
+                                                                for(int k = 0; k < itf_desc->bNumEndpoints; k++){
+                                                                        const struct libusb_endpoint_descriptor *ep_desc = &itf_desc->endpoint[k];
+                                                                        #ifdef APP_DEBUG
+                                                                        fprintf(stdout,"\nEndPoint Descriptors: ");
+                                                                        fprintf(stdout,"\n\tSize of EndPoint Descriptor: %d", ep_desc->bLength);
+                                                                        fprintf(stdout,"\n\tType of Descriptor: %d", ep_desc->bDescriptorType);
+                                                                        fprintf(stdout,"\n\tEndpoint Address: 0x0%x", ep_desc->bEndpointAddress);
+                                                                        fprintf(stdout,"\n\tMaximum Packet Size: %x", ep_desc->wMaxPacketSize);
+                                                                        fprintf(stdout,"\n\tAttributes applied to Endpoint: %d", ep_desc->bmAttributes);
+                                                                        fprintf(stdout,"\n\tInterval for Polling for data Transfer: %d\n", ep_desc->bInterval);
+                                                                        #endif
+                                                                }
+                                                        }
+                                                }
+                                        }
+                                        errcode = libusb_release_interface(device_handle, 0);
+                                        #ifdef APP_DEBUG
+                                        if (result != LIBUSB_SUCCESS) {
+                                        fprintf(stderr, "Failed to release interface: %s\n", libusb_error_name(result));
+                                        
+                                        }
+                                        #endif
+
+                                }
+                                libusb_free_config_descriptor(config);
+                        }
+                        libusb_close(device_handle);
+                        break;
+        }
+        libusb_close(device_handle);
+        }
+        libusb_free_device_list(device_list,1);
+        return is_device_found;
+}
+int FOS_SecurityKey_isConnected_ex(libusb_context* app_contex,SecurityKey_t* _device_key){
         if(_device_key == NULL || app_contex == NULL) return -1;
         libusb_device** device_list;
         int is_device_found = -1;
@@ -525,9 +636,12 @@ int FOS_SecurityKey_isConnected(libusb_context* app_contex,SecurityKey_t* _devic
         return is_device_found;
 }
 int FOS_SecurityKey_WriteFrame(SecurityKey_t* _device_key,uint8_t* _frame, uint8_t _framelen){
+        printf("what#10\n");
         if(_device_key != NULL && _device_key->_device_handle != NULL && _frame != NULL && _framelen > 0){
                 int bytes_sent = 0;
+                printf("what#11\n");
                 int errcode = libusb_bulk_transfer(_device_key->_device_handle,BULK_EP_IN,_frame,_framelen,&bytes_sent,5000); //! Timeout 5s
+                printf("what#12\n");
                 #ifdef APP_DEBUG
                 fprintf(stdout,"FOS_SecurityKey_WriteFrame: %s %d\n",libusb_strerror(errcode),bytes_sent);
                 #endif
@@ -575,6 +689,7 @@ uint16_t FOS_SecurityKey_CRC16(uint8_t* buffer, uint8_t buffersize){
         return crc;
 }
 int FOS_SecurityKey_QueryKey(SecurityKey_t* _security_key,uint8_t* _buffer){
+        printf("what#1\n");
         if(_buffer == NULL || _security_key == NULL) return -1;
         time_t random_bytes = time(NULL);
         uint8_t hash[SHA256_DIGEST_LENGTH] = {0};
@@ -602,7 +717,9 @@ int FOS_SecurityKey_QueryKey(SecurityKey_t* _security_key,uint8_t* _buffer){
         frame[14] = hash[frame[10]];
         frame[15] = hash[frame[11]];
         //! CRC
+        printf("what#2\n");
         uint16_t crc = FOS_SecurityKey_CRC16(frame,sizeof(frame)-2);
+        printf("what#3\n");
         frame[16] = crc & 0xFF;
         frame[17] = (crc >> 8) & 0xFF;
         //! Write
@@ -660,15 +777,19 @@ int FOS_SecurityKey_Authenticate(const char* config_filepath){
                         if(FOS_LoadUserSecret(config_filepath,_lsecret) != -1){
                                 //! SecurityKey Connected?
                     SecurityKey_t security_key;
-                                if(FOS_SecurityKey_isConnected(app_contex,&security_key) != -1){
+                                if(FOS_SecurityKey_isConnected(app_contex) != -1){
                                         if(is_done == false){
                                             FOS_DisplayLANConfigurationMenu();
+                                            fprintf(stdout,"What is here after menu\n");
                                         }
                                         if(is_done){
                                                 uint8_t request_id[4];
-                                                if(FOS_SecurityKey_isConnected(app_contex,&security_key) != -1 && FOS_SecurityKey_QueryKey(&security_key,request_id) != -1){
+                                                FOS_SecurityKey_isConnected_ex(app_contex,&security_key);
+                                                if(FOS_SecurityKey_QueryKey(&security_key,request_id) != -1){
                                                         char _rsecret[255];
+                                                fprintf(stdout,"TAG#4\n");
                                                         if(FOS_SecurityKey_CheckResp(&security_key,request_id,_rsecret) != -1){
+                                                                fprintf(stdout,"TAG#5\n");
                                                                 if(strcasecmp(_lsecret,_rsecret) == 0){
                                                                         fprintf(stdout, "[I] [SecurityKey Authenticated]\n");
                                                                         is_authenticated = 1;
@@ -685,7 +806,7 @@ int FOS_SecurityKey_Authenticate(const char* config_filepath){
                         libusb_exit(app_contex);
         }else
                         fprintf(stderr, "[E] [libusb_init] %s\n", strerror(errno));
-                sleep(5);
+                sleep(10);
         }
         return is_authenticated;
 }
