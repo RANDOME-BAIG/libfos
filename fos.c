@@ -788,6 +788,9 @@ int FOS_SecurityKey_Authenticate(const char* config_filepath){
                                                 if(FOS_SecurityKey_QueryKey(&security_key,request_id) != -1){
                                                         char _rsecret[255];
                                                         if(FOS_SecurityKey_CheckResp(&security_key,request_id,_rsecret) != -1){
+                                                                printf("FOS_SecurityKey_ReadFrame#008\n");
+                                                                fprintf(stdout,"LSecret: %s\n",_lsecret);
+                                                                fprintf(stdout,"RSecret: %s\n",_rsecret);
                                                                 if(strcasecmp(_lsecret,_rsecret) == 0){
                                                                         fprintf(stdout, "[I] [SecurityKey Authenticated]\n");
                                                                         is_authenticated = 1;
