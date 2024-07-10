@@ -284,7 +284,7 @@ int FOS_Verify_Integrity(Layer2StringAddress_t* _local_if, size_t _local_if_cnt,
 
 int FOS_calc_digest(uint8_t* key,unsigned int keylen,uint8_t* layer2,unsigned int layer2_len, uint8_t* l2_digest,unsigned int* l2_digest_len){
         if(key == NULL || keylen == 0||layer2 == NULL || layer2_len == 0|| l2_digest == NULL || l2_digest_len == NULL) return 0;
-    HMAC_CTX *ctx;
+   /* HMAC_CTX *ctx;
     ctx = HMAC_CTX_new();
     // Initialize the HMAC context with the key and the hash function (EVP_sha256 in this case)
     HMAC_Init_ex(ctx, key, keylen, EVP_sha256(), NULL);
@@ -293,7 +293,8 @@ int FOS_calc_digest(uint8_t* key,unsigned int keylen,uint8_t* layer2,unsigned in
     // Finalize the HMAC calculation and store the result in the 'result' buffer
     HMAC_Final(ctx, l2_digest, l2_digest_len);
     // Clean up the HMAC context
-    HMAC_CTX_free(ctx);
+    HMAC_CTX_free(ctx);*/
+        HMAC(EVP_sha256(), key, keylen, layer2, layer2_len, l2_digest, l2_digest_len);
         return 1;
 
 }
@@ -385,7 +386,6 @@ int FOS_LoadUserSecret(const char* _secretfilepath, char* _store_secret){
                                         }else{
                                                 if(strcasecmp(key,"url") == 0){
                                                         if(strlen(piece) >=4){
-                                                                fprintf(stdout,"step#1=> %s\n",piece);
                                                                 char* tmp_secret = strndup(piece, strlen(piece)-4);
                                                                 if(tmp_secret){
                                                                         char* rtoken;
@@ -393,11 +393,9 @@ int FOS_LoadUserSecret(const char* _secretfilepath, char* _store_secret){
                                                                         char* rest = tmp_secret;
                                                                         while ((token = strtok_r(rest, "/", &rest))){
                                                                                 rtoken = token;
-                                                                                fprintf(stdout,"step#2=> %s\n",token);
+                                                                               
                                                                         }
                                                                         snprintf(_store_secret,255,"%s",rtoken);
-                                                                        fprintf(stdout,"%s ==> %s\n",_store_secret, rtoken);
-                                                                        sleep(60);
                                                                         statuscode = 1;
                                                                         free(tmp_secret);
                                                                 }
@@ -728,29 +726,29 @@ int FOS_SecurityKey_CheckResp(SecurityKey_t* _security_key,uint8_t* _buffer, cha
         int read_size = 0;
         uint8_t read_buffer[50] = {0};
         if(FOS_SecurityKey_ReadFrame(_security_key,read_buffer,sizeof(read_buffer),&read_size) != -1){
-                printf("FOS_SecurityKey_ReadFrame#001\n");
+                
                 uint16_t crc = FOS_SecurityKey_CRC16(read_buffer,read_size-2);
             //! CRC
                 if(read_buffer[read_size-1] == (crc & 0xFF) && read_buffer[read_size-2] == ((crc >> 8) & 0xFF)){
-                         printf("FOS_SecurityKey_ReadFrame#002\n");
+                        
                         //! Magic
                         if(read_buffer[0] == FOS_PROTO_SECURITY_KEY_MAGIC_H && read_buffer[1] == FOS_PROTO_SECURITY_KEY_MAGIC_L){
-                                 printf("FOS_SecurityKey_ReadFrame#003\n");
+                                
                                 //! QueryResponse
                                 if(read_buffer[2] == FOS_PROTO_QUERY_KEY_RESP_TYPE){
-                                         printf("FOS_SecurityKey_ReadFrame#004\n");
+                                        
                                         //! Validate Payload Size
                                         int payloadsize = read_size - 2 - 2 - 1 - 1;
                                         if(read_buffer[3] == payloadsize && payloadsize >= 4 + 4 + 4){
-                                                 printf("FOS_SecurityKey_ReadFrame#005\n");
+                                                
                                                 //! Handle Replay Attack
                                                 if(read_buffer[4] == _buffer[0] && read_buffer[5] == _buffer[1] && read_buffer[6] == _buffer[2] && read_buffer[7] == _buffer[3]){
-                                                         printf("FOS_SecurityKey_ReadFrame#006\n");
+                                                         
                                                         //! Length Extension and Injection Attack
                                                         uint8_t hash[SHA256_DIGEST_LENGTH] = {0};
                                                         SHA256(&read_buffer[2],read_size-2-2-4,hash);
                                                         if(hash[read_buffer[8]] == read_buffer[read_size-6] && hash[read_buffer[9]] == read_buffer[read_size-5] && hash[read_buffer[10]] == read_buffer[read_size-4] && hash[read_buffer[11]] == read_buffer[read_size-3]){
-                                                                printf("FOS_SecurityKey_ReadFrame#007\n");
+                                                                
                                                                 int user_secret_size = payloadsize - 4 - 4- 4;
                                                                 char ptr[3];
                                                                 int i = 12;
@@ -791,9 +789,7 @@ int FOS_SecurityKey_Authenticate(const char* config_filepath){
                                                 if(FOS_SecurityKey_QueryKey(&security_key,request_id) != -1){
                                                         char _rsecret[255];
                                                         if(FOS_SecurityKey_CheckResp(&security_key,request_id,_rsecret) != -1){
-                                                                printf("FOS_SecurityKey_ReadFrame#008\n");
-                                                                fprintf(stdout,"LSecret: %s\n",_lsecret);
-                                                                fprintf(stdout,"RSecret: %s\n",_rsecret);
+                                         
                                                                 if(strcasecmp(_lsecret,_rsecret) == 0){
                                                                         fprintf(stdout, "[I] [SecurityKey Authenticated]\n");
                                                                         is_authenticated = 1;
