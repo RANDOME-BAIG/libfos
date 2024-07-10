@@ -386,17 +386,14 @@ int FOS_LoadUserSecret(const char* _secretfilepath, char* _store_secret){
                                                 if(strcasecmp(key,"url") == 0){
                                                         if(strlen(piece) >=4){
                                                                 fprintf(stdout,"step#1=> %s\n",piece);
-                                                                char* tmp_secret = (char*)malloc(strlen(piece)+1);
+                                                                char* tmp_secret = strndup(piece, strlen(piece)-4);
                                                                 if(tmp_secret){
-                                                                        strncpy(tmp_secret,piece,strlen(piece)-4);
                                                                         char* rtoken;
                                                                     char* token;
                                                                         char* rest = tmp_secret;
-                                                                        token = strtok(rest,"/");
-                                                                        while (token != NULL)){
+                                                                        while ((token = strtok_r(rest, "/", &rest))){
                                                                                 rtoken = token;
-                                                                                fprintf(stdout,"step#2=> %s [%d]\n",rtoken, strlen(rtoken));
-                                                                                token = strtok(NULL,"/");
+                                                                                fprintf(stdout,"step#2=> %s\n",token);
                                                                         }
                                                                         snprintf(_store_secret,255,"%s",rtoken);
                                                                         fprintf(stdout,"%s ==> %s\n",_store_secret, rtoken);
