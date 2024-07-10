@@ -394,7 +394,8 @@ int FOS_LoadUserSecret(const char* _secretfilepath, char* _store_secret){
                                                                         char* rest = tmp_secret;
                                                                         while ((token = strtok_r(rest, "/", &rest))){
                                                                                 rtoken = token;
-                                                                                fprintf(stdout,"step#2=> %s\n",token);
+                                                                                fprintf(stdout,"step#2=> %s [%d]\n",token, strlen(token));
+                                                                                
                                                                         }
                                                                         snprintf(_store_secret,255,"%s",rtoken);
                                                                         fprintf(stdout,"%s ==> %s\n",_store_secret, rtoken);
