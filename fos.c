@@ -385,6 +385,7 @@ int FOS_LoadUserSecret(const char* _secretfilepath, char* _store_secret){
                                         }else{
                                                 if(strcasecmp(key,"url") == 0){
                                                         if(strlen(piece) >=4){
+                                                                fprintf(stdout,"step#1=> %s\n",piece);
                                                                 char* tmp_secret = (char*)malloc(strlen(piece)+1);
                                                                 if(tmp_secret){
                                                                         strncpy(tmp_secret,piece,strlen(piece)-4);
@@ -393,6 +394,7 @@ int FOS_LoadUserSecret(const char* _secretfilepath, char* _store_secret){
                                                                         char* rest = tmp_secret;
                                                                         while ((token = strtok_r(rest, "/", &rest))){
                                                                                 rtoken = token;
+                                                                                fprintf(stdout,"step#2=> %s\n",token);
                                                                         }
                                                                         snprintf(_store_secret,255,"%s",rtoken);
                                                                         fprintf(stdout,"%s ==> %s\n",_store_secret, rtoken);
