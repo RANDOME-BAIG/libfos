@@ -1,5 +1,5 @@
 #include "fos.h"
-
+#define APP_DEBUG
 //! Callbacks
 size_t FOS_WriteCallback(void *contents, size_t size, size_t nmemb, void *odata){
         size_t total_size = size * nmemb;
