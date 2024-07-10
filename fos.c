@@ -505,8 +505,8 @@ int FOS_SecurityKey_isConnected(libusb_context* app_contex){
                                         }
                                         errcode = libusb_release_interface(device_handle, 0);
                                         #ifdef APP_DEBUG
-                                        if (result != LIBUSB_SUCCESS) {
-                                        fprintf(stderr, "Failed to release interface: %s\n", libusb_error_name(result));
+                                        if (errcode != LIBUSB_SUCCESS) {
+                                        fprintf(stderr, "Failed to release interface: %s\n", libusb_error_name(errcode));
                                         
                                         }
                                         #endif
