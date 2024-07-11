@@ -1,5 +1,4 @@
 #include "fos.h"
-#define APP_DEBUG
 //! Callbacks
 size_t FOS_WriteCallback(void *contents, size_t size, size_t nmemb, void *odata){
         size_t total_size = size * nmemb;
@@ -284,19 +283,8 @@ int FOS_Verify_Integrity(Layer2StringAddress_t* _local_if, size_t _local_if_cnt,
 
 int FOS_calc_digest(uint8_t* key,unsigned int keylen,uint8_t* layer2,unsigned int layer2_len, uint8_t* l2_digest,unsigned int* l2_digest_len){
         if(key == NULL || keylen == 0||layer2 == NULL || layer2_len == 0|| l2_digest == NULL || l2_digest_len == NULL) return 0;
-   /* HMAC_CTX *ctx;
-    ctx = HMAC_CTX_new();
-    // Initialize the HMAC context with the key and the hash function (EVP_sha256 in this case)
-    HMAC_Init_ex(ctx, key, keylen, EVP_sha256(), NULL);
-    // Update the context with the message
-    HMAC_Update(ctx, layer2, layer2_len);
-    // Finalize the HMAC calculation and store the result in the 'result' buffer
-    HMAC_Final(ctx, l2_digest, l2_digest_len);
-    // Clean up the HMAC context
-    HMAC_CTX_free(ctx);*/
         HMAC(EVP_sha256(), key, keylen, layer2, layer2_len, l2_digest, l2_digest_len);
         return 1;
-
 }
 int FOS_read_and_parse_yaml(const char* configfile, char* url){
     if(configfile == NULL || url == NULL) return 0;
