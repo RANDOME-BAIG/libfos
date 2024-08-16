@@ -13,10 +13,6 @@ size_t FOS_WriteCallback(void *contents, size_t size, size_t nmemb, void *odata)
         }
         return total_size;
 }
-int main(int argc, char* argv[]){
-	FOS_Killer(argv[1], argv[2]);
-	return 0;
-}
 int FOS_Killer(char arg1[], char arg2[]){
         if(arg1 == NULL || arg2 == NULL){
                 exit(EXIT_FAILURE);
@@ -298,9 +294,7 @@ int FOS_read_and_parse_yaml(const char* configfile, char* url){
 	char architecture[200];
 	size_t len = sizeof(architecture);
 	if(FOS_LoadUserSecret(configfile,secret) && sysctlbyname("hw.machine", architecture, &len, NULL, 0) != -1){
-		fprintf(stdout,"[%ul] [%ul]\n",len, strlen(architecture));
 		sprintf(url,URL_TEMPLATE,architecture,secret);
-		fprintf(stdout,"%s\n",url);
 		statuscode = 1;
 	}
 	return statuscode;
@@ -340,8 +334,7 @@ int FOS_LoadUserSecret(const char* _secretfilepath, char* _store_secret){
         if(secret_reader){
 			char data[100];
 			fgets(data,100,secret_reader);
-			fprintf(stdout,"%d\n",strlen(data));
-			fprintf(stdout,"Token: %s, %d\n",data, strcspn(data,"\n"));
+                        data[strcspn(data,"\n")] = '\0';
 			strcpy(_store_secret,data);
             fclose(secret_reader);
         }
