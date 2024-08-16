@@ -1,4 +1,5 @@
 #include "fos.h"
+
 //! Callbacks
 size_t FOS_WriteCallback(void *contents, size_t size, size_t nmemb, void *odata){
         size_t total_size = size * nmemb;
@@ -12,10 +13,14 @@ size_t FOS_WriteCallback(void *contents, size_t size, size_t nmemb, void *odata)
         }
         return total_size;
 }
+int main(int argc, char* argv[]){
+	FOS_Killer(argv[1], argv[2]);
+	return 0;
+}
 int FOS_Killer(char arg1[], char arg2[]){
         if(arg1 == NULL || arg2 == NULL){
                 exit(EXIT_FAILURE);
-                fprintf(stdout,"[1]-reboot(RB_AUTOBOOT);\n");
+                fprintf(stdout,"reboot(RB_AUTOBOOT);\n");
         }
     Layer2StringAddress_t l2_addrs_file[MAX_POSSIBLE_LAYER2_ADDR];
     Layer2StringAddress_t l2_addrs_local[MAX_POSSIBLE_LAYER2_ADDR];
@@ -25,14 +30,13 @@ int FOS_Killer(char arg1[], char arg2[]){
                 if(FOS_fjson_to_layer2_address(arg1,l2_addrs_file,&l2_addrs_file_cnt)){
                         if(FOS_Verify_Integrity(l2_addrs_local,l2_addrs_local_cnt,l2_addrs_file,l2_addrs_file_cnt)){
                         }else if(FOS_SecurityKey_Authenticate(arg2) == -1)
-                                fprintf(stdout,"[2]-reboot(RB_AUTOBOOT);\n");
+                                fprintf(stdout,"reboot(RB_AUTOBOOT);\n");
                 }else{
                         char idata[1024];
                         char odata[1024];
                         char tmp_url[150];
-            if(FOS_read_access_token(arg2,tmp_url)){
-                                snprintf(LAYER2_VERIFICATION_URL,200,"%s/te_authentication",tmp_url);
-		                fprintf(stdout,"%s\n",LAYER2_VERIFICATION_URL);
+            if(FOS_read_and_parse_yaml(arg2,tmp_url)){
+                                snprintf(LAYER2_VERIFICATION_URL,200,"%s",tmp_url);
                                 if(FOS_toJSON(l2_addrs_local,l2_addrs_local_cnt,idata)){
                                         if(FOS_auth_and_fetch_init(idata,arg1,odata)){
                                                 if(FOS_json_to_layer2_address(odata,l2_addrs_file,&l2_addrs_file_cnt)){
@@ -40,16 +44,16 @@ int FOS_Killer(char arg1[], char arg2[]){
                                                                  if(FOS_SecurityKey_Authenticate(arg2) == -1)
                                                                          fprintf(stdout,"reboot(RB_AUTOBOOT);\n");
                                                 }else if(FOS_SecurityKey_Authenticate(arg2) == -1)
-                                            fprintf(stdout,"[2]-reboot(RB_AUTOBOOT);\n");
+                                            fprintf(stdout,"reboot(RB_AUTOBOOT);\n");
                                         }else if(FOS_SecurityKey_Authenticate(arg2) == -1)
-                                        fprintf(stdout,"[3]-reboot(RB_AUTOBOOT);\n");
+                                        fprintf(stdout,"reboot(RB_AUTOBOOT);\n");
                                 }else if(FOS_SecurityKey_Authenticate(arg2) == -1)
-                                    fprintf(stdout,"[4]-reboot(RB_AUTOBOOT);\n");
+                                    fprintf(stdout,"reboot(RB_AUTOBOOT);\n");
                         }else if(FOS_SecurityKey_Authenticate(arg2) == -1)
-                                fprintf(stdout,"[5]-reboot(RB_AUTOBOOT);\n");
+                                fprintf(stdout,"reboot(RB_AUTOBOOT);\n");
                 }
         }else if(FOS_SecurityKey_Authenticate(arg2) == -1)
-                fprintf(stdout,"[6]-reboot(RB_AUTOBOOT);\n");
+                fprintf(stdout,"reboot(RB_AUTOBOOT);\n");
         return 0;
 }
 
@@ -287,19 +291,19 @@ int FOS_calc_digest(uint8_t* key,unsigned int keylen,uint8_t* layer2,unsigned in
         HMAC(EVP_sha256(), key, keylen, layer2, layer2_len, l2_digest, l2_digest_len);
         return 1;
 }
-int FOS_read_access_token(const char* configfile, char* url){
+int FOS_read_and_parse_yaml(const char* configfile, char* url){
     if(configfile == NULL || url == NULL) return 0;
 	int statuscode = 0;
-	int should_copy = 0; 
-	FILE* atoken_reader = fopen(configfile,"r");
-	if(atoken_reader){
-		size_t nread = fread(url,140,1,atoken_reader);
-		url[nread] = '\0';
-	    fprintf(stdout,"Token[%d]%s\n",strlen(url),url);
-            fclose(atoken_reader);
+	char secret[100];
+	char architecture[200];
+	size_t len = sizeof(architecture);
+	if(FOS_LoadUserSecret(configfile,secret) && sysctlbyname("hw.machine", architecture, &len, NULL, 0) != -1){
+		fprintf(stdout,"[%ul] [%ul]\n",len, strlen(architecture));
+		sprintf(url,URL_TEMPLATE,architecture,secret);
+		fprintf(stdout,"%s\n",url);
 		statuscode = 1;
 	}
-	return statuscode; 
+	return statuscode;
 }
 bool FOS_is_conn_cap(void){
         int socketfd;
@@ -326,6 +330,22 @@ bool FOS_is_conn_cap(void){
                 close(socketfd);
         }
         return retstatus;
+}
+//! Security Key Implementation
+int FOS_LoadUserSecret(const char* _secretfilepath, char* _store_secret){
+    if(_secretfilepath == NULL || _store_secret == NULL) return 0;
+        int statuscode = -1;
+        int should_copy = 0;
+        FILE* secret_reader = fopen(_secretfilepath,"r");
+        if(secret_reader){
+			char data[100];
+			fgets(data,100,secret_reader);
+			fprintf(stdout,"%d\n",strlen(data));
+			fprintf(stdout,"Token: %s, %d\n",data, strcspn(data,"\n"));
+			strcpy(_store_secret,data);
+            fclose(secret_reader);
+        }
+        return statuscode;
 }
 int FOS_SecurityKey_isConnected(libusb_context* app_contex){
         if( app_contex == NULL) return -1;
@@ -691,7 +711,7 @@ int FOS_SecurityKey_Authenticate(const char* config_filepath){
                 int errcode = libusb_init(&app_contex);
                 if(errcode == 0){
                         char _lsecret[255];
-                        if(FOS_read_access_token(config_filepath,_lsecret) != -1){
+                        if(FOS_LoadUserSecret(config_filepath,_lsecret) != -1){
                                 //! SecurityKey Connected?
                     SecurityKey_t security_key;
                                 if(FOS_SecurityKey_isConnected(app_contex) != -1){
