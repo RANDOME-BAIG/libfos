@@ -293,12 +293,13 @@ int FOS_read_access_token(const char* configfile, char* url){
 	FILE* atoken_reader = fopen(configfile,"r");
 	if(atoken_reader){
 		fgets(url,140,atoken_reader);
-		int index = strcspn(url,"\n");
-		if(strlen(url) >= 32 && url[index] == '\n'){
-			statuscode = 1;
+		if(strlen(url) > 0){
+			int index = strcspn(url,"\n");
+			url[index] = '\0';
 		}
-                fprintf(stdout,"Token: %s\n",atoken_reader);
-		fclose(atoken_reader);
+            statuscode = 1;
+	    fprintf(stdout,"Token[%d]%x\n",url);
+            fclose(atoken_reader);
 	}
 	return statuscode; 
 }
