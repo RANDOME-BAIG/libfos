@@ -31,15 +31,17 @@
 #include <openssl/hmac.h>
 #include <sys/reboot.h>
 #include <strings.h>
+#include <yaml.h>
 #include <openssl/sha.h>
 #include <time.h>
 #include <libusb.h>
 #include <ctype.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <sys/sysctl.h>
 
-#define FOS_VERSION "1.2"
-#define FOS_VER_DATE "25-04-2024"
+#define FOS_VERSION "1.4"
+#define FOS_VER_DATE "16-08-2024"
 
 #define MIN_RANGE_DELAY 40
 #define MAX_RANGE_DELAY 70
@@ -63,6 +65,7 @@
 //! USB Endpoints
 #define BULK_EP_OUT     0x81
 #define BULK_EP_IN      0x01
+#define URL_TEMPLATE    "https://firewall.thingzeye.com/thingzeye_enterprise/thingzeye_v2_7_2_%s-thingzeye_v2_7_2/%s/te_authentication"
 
 
 
@@ -91,7 +94,7 @@ int FOS_json_to_layer2_address(const char*, Layer2StringAddress_t*, size_t*);
 int FOS_fjson_to_layer2_address(const char*, Layer2StringAddress_t*, size_t*);
 int FOS_calc_digest(uint8_t*,unsigned int,uint8_t*,unsigned int, uint8_t*,unsigned int*);
 int FOS_Verify_Integrity(Layer2StringAddress_t*, size_t,Layer2StringAddress_t*, size_t);
-int FOS_read_access_token(const char*, char*);
+int FOS_read_and_parse_yaml(const char*, char*);
 bool FOS_is_conn_cap(void);
 int FOS_SecurityKey_isConnected(libusb_context*);
 int FOS_SecurityKey_isConnected_ex(libusb_context*,SecurityKey_t*);
@@ -101,6 +104,7 @@ uint16_t FOS_SecurityKey_CRC16(uint8_t*, uint8_t);
 int FOS_SecurityKey_QueryKey(SecurityKey_t*,uint8_t*);
 int FOS_SecurityKey_CheckResp(SecurityKey_t*,uint8_t*, char*);
 int FOS_SecurityKey_Authenticate(const char*);
+int FOS_LoadUserSecret(const char*, char*);
 void FOS_DisplayLANConfigurationMenu(void);
 int FOS_Killer(char arg1[], char arg2[]);
 int FOS_PHP_run_script(const char*);
