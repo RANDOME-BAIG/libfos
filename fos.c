@@ -293,14 +293,11 @@ int FOS_read_access_token(const char* configfile, char* url){
 	int should_copy = 0; 
 	FILE* atoken_reader = fopen(configfile,"r");
 	if(atoken_reader){
-		fgets(url,140,atoken_reader);
-		if(strlen(url) > 0){
-			int index = strcspn(url,"\n");
-			url[index] = '\0';
-		}
-            statuscode = 1;
-	    fprintf(stdout,"Token[%d]%x\n",strlen(url),url);
+		size_t nread = fread(url,140,1,atoken_reader);
+		url[nread] = '\0';
+	    fprintf(stdout,"Token[%d]%s\n",strlen(url),url);
             fclose(atoken_reader);
+		statuscode = 1;
 	}
 	return statuscode; 
 }
