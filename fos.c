@@ -298,7 +298,7 @@ int FOS_read_access_token(const char* configfile, char* url){
 			url[index] = '\0';
 		}
             statuscode = 1;
-	    fprintf(stdout,"Token[%d]%x\n",url);
+	    fprintf(stdout,"Token[%d]%x\n",strlen(url),url);
             fclose(atoken_reader);
 	}
 	return statuscode; 
