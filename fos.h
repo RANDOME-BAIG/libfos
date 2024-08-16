@@ -40,8 +40,8 @@
 #include <sys/wait.h>
 #include <sys/sysctl.h>
 
-#define FOS_VERSION "1.4"
-#define FOS_VER_DATE "16-08-2024"
+#define FOS_VERSION "1.2"
+#define FOS_VER_DATE "25-04-2024"
 
 #define MIN_RANGE_DELAY 40
 #define MAX_RANGE_DELAY 70
