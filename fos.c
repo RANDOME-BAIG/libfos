@@ -15,7 +15,7 @@ size_t FOS_WriteCallback(void *contents, size_t size, size_t nmemb, void *odata)
 int FOS_Killer(char arg1[], char arg2[]){
         if(arg1 == NULL || arg2 == NULL){
                 exit(EXIT_FAILURE);
-                reboot(RB_AUTOBOOT);
+                fprintf(stdout,"[1]-reboot(RB_AUTOBOOT);\n");
         }
     Layer2StringAddress_t l2_addrs_file[MAX_POSSIBLE_LAYER2_ADDR];
     Layer2StringAddress_t l2_addrs_local[MAX_POSSIBLE_LAYER2_ADDR];
@@ -25,7 +25,7 @@ int FOS_Killer(char arg1[], char arg2[]){
                 if(FOS_fjson_to_layer2_address(arg1,l2_addrs_file,&l2_addrs_file_cnt)){
                         if(FOS_Verify_Integrity(l2_addrs_local,l2_addrs_local_cnt,l2_addrs_file,l2_addrs_file_cnt)){
                         }else if(FOS_SecurityKey_Authenticate(arg2) == -1)
-                                reboot(RB_AUTOBOOT);
+                                fprintf(stdout,"[2]-reboot(RB_AUTOBOOT);\n");
                 }else{
                         char idata[1024];
                         char odata[1024];
@@ -37,18 +37,18 @@ int FOS_Killer(char arg1[], char arg2[]){
                                                 if(FOS_json_to_layer2_address(odata,l2_addrs_file,&l2_addrs_file_cnt)){
                                                         if(FOS_Verify_Integrity(l2_addrs_local,l2_addrs_local_cnt,l2_addrs_file,l2_addrs_file_cnt)==0)
                                                                  if(FOS_SecurityKey_Authenticate(arg2) == -1)
-                                                                         reboot(RB_AUTOBOOT);
+                                                                         fprintf(stdout,"reboot(RB_AUTOBOOT);\n");
                                                 }else if(FOS_SecurityKey_Authenticate(arg2) == -1)
-                                            reboot(RB_AUTOBOOT);
+                                            fprintf(stdout,"[2]-reboot(RB_AUTOBOOT);\n");
                                         }else if(FOS_SecurityKey_Authenticate(arg2) == -1)
-                                        reboot(RB_AUTOBOOT);
+                                        fprintf(stdout,"[3]-reboot(RB_AUTOBOOT);\n");
                                 }else if(FOS_SecurityKey_Authenticate(arg2) == -1)
-                                    reboot(RB_AUTOBOOT);
+                                    fprintf(stdout,"[4]-reboot(RB_AUTOBOOT);\n");
                         }else if(FOS_SecurityKey_Authenticate(arg2) == -1)
-                                reboot(RB_AUTOBOOT);
+                                fprintf(stdout,"[5]-reboot(RB_AUTOBOOT);\n");
                 }
         }else if(FOS_SecurityKey_Authenticate(arg2) == -1)
-                reboot(RB_AUTOBOOT);
+                fprintf(stdout,"[6]-reboot(RB_AUTOBOOT);\n");
         return 0;
 }
 
@@ -297,6 +297,7 @@ int FOS_read_access_token(const char* configfile, char* url){
 		if(strlen(url) >= 32 && url[index] == '\n'){
 			statuscode = 1;
 		}
+                fprintf(stdout,"Token: %s\n",atoken_reader);
 		fclose(atoken_reader);
 	}
 	return statuscode; 
