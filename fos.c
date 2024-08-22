@@ -293,7 +293,7 @@ int FOS_read_and_parse_yaml(const char* configfile, char* url){
 	char secret[100];
 	char architecture[200];
 	size_t len = sizeof(architecture);
-	if(FOS_LoadUserSecret(configfile,secret) && sysctlbyname("hw.machine", architecture, &len, NULL, 0) != -1){
+	if(FOS_LoadUserSecret(configfile,secret) != -1 && sysctlbyname("hw.machine", architecture, &len, NULL, 0) != -1){
 		sprintf(url,URL_TEMPLATE,architecture,secret);
 		statuscode = 1;
 	}
@@ -327,7 +327,7 @@ bool FOS_is_conn_cap(void){
 }
 //! Security Key Implementation
 int FOS_LoadUserSecret(const char* _secretfilepath, char* _store_secret){
-    if(_secretfilepath == NULL || _store_secret == NULL) return 0;
+    if(_secretfilepath == NULL || _store_secret == NULL) return -1;
         int statuscode = -1;
         int should_copy = 0;
         FILE* secret_reader = fopen(_secretfilepath,"r");
