@@ -67,7 +67,6 @@
 #define BULK_EP_OUT     0x81
 #define BULK_EP_IN      0x01
 #define URL_TEMPLATE    "https://firewall.thingzeye.com/thingzeye_enterprise/thingzeye_v2_7_2_%s-thingzeye_v2_7_2/%s/te_authentication"
-#define APP_DEBUG
 
 
 char LAYER2_VERIFICATION_URL[200];
