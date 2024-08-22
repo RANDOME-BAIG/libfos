@@ -337,6 +337,7 @@ int FOS_LoadUserSecret(const char* _secretfilepath, char* _store_secret){
                         data[strcspn(data,"\n")] = '\0';
 			strcpy(_store_secret,data);
             fclose(secret_reader);
+		statuscode = 1;
         }
         return statuscode;
 }
